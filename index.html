@@ -160,6 +160,7 @@
             const [showHistory, setShowHistory] = useState(false);
             const [stats, setStats] = useState({ lines: 0, characters: 0 });
             const [toast, setToast] = useState(null);
+            const [userIp, setUserIp] = useState('...');
 
             // Function to show toast
             const showToast = useCallback((message) => {
@@ -167,6 +168,14 @@
                 setTimeout(() => {
                     setToast(null);
                 }, 2000);
+            }, []);
+
+            // Fetch user IP
+            useEffect(() => {
+                fetch('https://api.ipify.org?format=json')
+                    .then(r => r.json())
+                    .then(data => setUserIp(data.ip))
+                    .catch(() => setUserIp('unavailable'));
             }, []);
 
             // Load history from localStorage
@@ -287,6 +296,9 @@
 
             return (
                 <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark' : ''}`}>
+                    {/* IP Banner */}
+                    <IpBanner ip={userIp} showToast={showToast} />
+
                     {/* Header */}
                     <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -452,6 +464,37 @@
                             </div>
                         </div>
                     </footer>
+                </div>
+            );
+        }
+
+        // Componente IpBanner
+        function IpBanner({ ip, showToast }) {
+            const copyIp = async () => {
+                try {
+                    await navigator.clipboard.writeText(ip);
+                    showToast('IP copied!');
+                } catch {
+                    showToast('Copy error');
+                }
+            };
+
+            return (
+                <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 text-sm">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 flex items-center justify-center gap-3">
+                        <span className="text-gray-500 dark:text-gray-400">Your IP:</span>
+                        <span className="font-mono font-semibold text-gray-800 dark:text-gray-100 tracking-wide">{ip}</span>
+                        <button
+                            onClick={copyIp}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs font-medium transition-colors"
+                            title="Copy IP"
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            Copy
+                        </button>
+                    </div>
                 </div>
             );
         }
